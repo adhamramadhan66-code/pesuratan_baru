@@ -6,12 +6,12 @@
     const avatar = document.querySelector('.header-right .profile-img');
     if (!avatar) return;
 
-    let email = 'admin';
-    try { email = (JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || '{}').email) || 'admin'; } catch (e) {}
-    const KEY = 'profilePhoto:' + email;
+    // Kunci foto mengikuti akun yang sedang masuk (tamu memakai foto bawaan, bukan foto admin)
+    const emailSekarang = () => { try { return (JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null') || {}).email || ''; } catch (e) { return ''; } };
+    const KEY = () => 'profilePhoto:' + (emailSekarang() || 'admin');
     const DEFAULT_SRC = avatar.getAttribute('src');
-    const getPhoto = () => { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
-    const setPhoto = (v) => { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); return true; } catch (e) { return false; } };
+    const getPhoto = () => { if (!emailSekarang()) return ''; try { return localStorage.getItem(KEY()) || ''; } catch (e) { return ''; } };
+    const setPhoto = (v) => { try { v ? localStorage.setItem(KEY(), v) : localStorage.removeItem(KEY()); return true; } catch (e) { return false; } };
 
     const svg = (d) => '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
     const I = {
@@ -166,12 +166,18 @@
         } else if (a === 'set') {
             toast('Halaman pengaturan belum tersedia.');
         } else if (a === 'out') {
-            try { sessionStorage.removeItem('kampuslyCurrentUser'); } catch (err) {}
-            window.location.replace('index.html?logout=1');
+            if (window.Login) Login.keluar();
+            else { try { sessionStorage.removeItem('kampuslyCurrentUser'); } catch (err) {} window.location.replace('dashboard.html'); }
         } else if (a === 'del') {
             if (!confirm('Hapus foto profil dan kembali ke foto bawaan?')) return;
             setPhoto(''); apply(); toast('Foto profil dihapus');
         }
+    });
+
+    // Setelah login lewat popup: tampilkan nama dan foto akun
+    document.addEventListener('kampusly:login', () => {
+        dd.querySelector('.pd-name').textContent = (labelEl && labelEl.textContent) || 'Admin TSU';
+        apply();
     });
 
     apply();

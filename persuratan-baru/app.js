@@ -4,21 +4,24 @@
     const SESSION_KEY = 'kampuslyCurrentUser';
     const $ = (id) => document.getElementById(id);
 
-    // ---------- Sesi login (prototipe, sama seperti sebelumnya) ----------
-    function cekSesi() {
+    // ---------- Sesi login (prototipe) ----------
+    // Halaman terbuka untuk tamu. Login diminta lewat popup (login.js) saat tamu menekan sesuatu.
+    function sesi() {
         try {
             const u = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-            if (!u || u.email !== 'admin@tsu.ac.id') { window.location.replace('index.html'); return null; }
-            return u;
-        } catch (e) { window.location.replace('index.html'); return null; }
+            return u && u.email === 'admin@tsu.ac.id' ? u : null;
+        } catch (e) { return null; }
     }
-    const user = cekSesi();
-    if (user && $('currentUserLabel')) $('currentUserLabel').textContent = user.name || user.email;
-    window.addEventListener('pageshow', cekSesi);
+    function labelUser() {
+        const u = sesi();
+        if ($('currentUserLabel')) $('currentUserLabel').textContent = u ? (u.name || u.email) : 'Tamu';
+    }
+    labelUser();
+    document.addEventListener('kampusly:login', labelUser);
+    window.addEventListener('pageshow', labelUser);
     if ($('logoutBtn')) $('logoutBtn').addEventListener('click', (ev) => {
         ev.preventDefault();
-        try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
-        window.location.replace('index.html?logout=1');
+        if (window.Login) Login.keluar();
     });
 
     // ---------- Tema gelap/terang ----------

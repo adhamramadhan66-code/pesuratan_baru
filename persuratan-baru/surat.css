@@ -315,3 +315,11 @@ dialog.detail .kartu-thumb { aspect-ratio: 16 / 9; max-height: 15rem; }
 
 /* Dashboard: grafik satu kolom penuh di bawah Surat terbaru */
 .charts-grid.tunggal { grid-template-columns: 1fr; margin-top: 1.5rem; margin-bottom: 0; }
+
+/* Video di atas dashboard */
+.video-sec { position: relative; margin-bottom: 1.5rem; border-radius: 1rem; overflow: hidden; background: #000; box-shadow: 0 0 0 1px var(--border-color); aspect-ratio: 16 / 6; max-height: 26rem; }
+.video-sec video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.video-sec .video-kosong { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; padding: 1rem; text-align: center; color: var(--text-muted); background: var(--card-bg); font-size: .875rem; }
+.video-sec.gagal video { display: none; }
+.video-sec.gagal .video-kosong { display: flex; }
+@media (max-width: 700px) { .video-sec { aspect-ratio: 16 / 9; } }

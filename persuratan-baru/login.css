@@ -1,0 +1,124 @@
+/* Popup login: hanya panel form (tanpa video), latar putih/terang.
+   Tampilannya tetap terang walau tema aplikasi sedang gelap. */
+dialog.login-dialog {
+    --lg-forest: #2E9E68;
+    --lg-forest-dark: #1F7A4D;
+    --lg-ink: #14201A;
+    --lg-soft: #5F6F66;
+    --lg-line: #DCE4DF;
+    --lg-field: #F5F8F6;
+    --lg-amber: #F2A93B;
+    color-scheme: light;
+    width: min(400px, calc(100vw - 1.5rem));
+    max-height: calc(100vh - 1.5rem);
+    overflow-y: auto;
+    margin: auto;
+    padding: 30px 28px 24px;
+    border: 1px solid var(--lg-line);
+    border-radius: 18px;
+    background: #ffffff;
+    color: var(--lg-ink);
+    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    box-shadow: 0 30px 70px -20px rgba(0, 0, 0, .45);
+}
+dialog.login-dialog[open] { animation: lgPop .28s cubic-bezier(.22, 1, .36, 1) both; }
+dialog.login-dialog::backdrop { background: rgba(15, 26, 21, .55); backdrop-filter: blur(2px); }
+@keyframes lgPop { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes lgSpin { to { transform: rotate(360deg); } }
+@keyframes lgShake { 0%, 100% { transform: none; } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+dialog.login-dialog.goyang { animation: lgShake .3s ease; }
+
+.login-dialog * { box-sizing: border-box; }
+
+.login-dialog .lg-tutup {
+    position: absolute; top: 12px; right: 12px;
+    width: 32px; height: 32px; border: none; border-radius: 8px;
+    background: transparent; color: var(--lg-soft);
+    font-size: 22px; line-height: 1; cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+}
+.login-dialog .lg-tutup:hover { background: var(--lg-field); color: var(--lg-ink); }
+
+.login-dialog .lg-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.login-dialog .lg-mark {
+    width: 34px; height: 34px; border-radius: 9px; background: var(--lg-forest);
+    display: flex; align-items: center; justify-content: center;
+}
+.login-dialog .lg-mark svg { width: 18px; height: 18px; }
+.login-dialog .lg-name { font-size: 19px; font-weight: 700; color: var(--lg-ink); }
+
+.login-dialog h2 { margin: 0 0 4px; font-size: 22px; font-weight: 600; color: var(--lg-ink); }
+.login-dialog .lg-sub { margin: 0 0 20px; font-size: 13px; color: var(--lg-soft); line-height: 1.45; }
+
+.login-dialog .lg-sso {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 11px 10px;
+    border: 1px solid var(--lg-line); border-radius: 10px;
+    background: #fff; color: var(--lg-ink);
+    font: 500 14px/1 inherit; font-family: inherit; cursor: pointer;
+    transition: border-color .2s ease, box-shadow .25s ease, background .2s ease;
+}
+.login-dialog .lg-sso:hover { border-color: var(--lg-forest); background: var(--lg-field); box-shadow: 0 6px 16px -10px rgba(46, 158, 104, .6); }
+.login-dialog .lg-sso svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+.login-dialog .lg-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--lg-soft); font-size: 12px; }
+.login-dialog .lg-divider::before, .login-dialog .lg-divider::after { content: ""; flex: 1; height: 1px; background: var(--lg-line); }
+
+.login-dialog .lg-pesan {
+    display: none; margin: 0 0 14px; padding: 10px 12px; border-radius: 8px;
+    border: 1px solid rgba(220, 38, 38, .3); background: rgba(220, 38, 38, .07);
+    color: #B42318; font-size: 12.5px; line-height: 1.45;
+}
+.login-dialog .lg-pesan.show { display: block; }
+.login-dialog .lg-pesan.sukses { border-color: rgba(46, 158, 104, .4); background: rgba(46, 158, 104, .09); color: var(--lg-forest-dark); }
+
+.login-dialog .lg-field { margin-bottom: 14px; }
+.login-dialog label { display: block; margin: 0 0 6px; font-size: 13px; font-weight: 500; color: var(--lg-soft); transition: color .2s ease; }
+.login-dialog .lg-field:focus-within label { color: var(--lg-forest-dark); }
+.login-dialog .lg-wrap { position: relative; }
+.login-dialog .lg-wrap svg {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px; color: var(--lg-soft); pointer-events: none; transition: color .2s ease;
+}
+.login-dialog .lg-wrap:focus-within svg { color: var(--lg-forest); }
+.login-dialog input[type="email"],
+.login-dialog input[type="password"] {
+    width: 100%; padding: 12px 14px 12px 38px;
+    border: 1px solid var(--lg-line); border-radius: 10px;
+    background: var(--lg-field); color: var(--lg-ink);
+    font: 14px/1.2 inherit; font-family: inherit; outline: none;
+    transition: border-color .2s ease, box-shadow .25s ease, background .2s ease;
+}
+.login-dialog input::placeholder { color: #9AA8A0; }
+.login-dialog input:focus { border-color: var(--lg-forest); background: #fff; box-shadow: 0 0 0 3px rgba(46, 158, 104, .18); }
+
+.login-dialog .lg-lupa { display: flex; justify-content: flex-end; margin: -2px 0 18px; }
+.login-dialog .lg-link {
+    padding: 0; border: none; background: none; cursor: pointer;
+    font: 500 13px/1 inherit; font-family: inherit; color: var(--lg-forest-dark);
+}
+.login-dialog .lg-link:hover { text-decoration: underline; }
+
+.login-dialog .lg-masuk {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px; border: none; border-radius: 10px;
+    background: var(--lg-forest); color: #fff;
+    font: 600 15px/1 inherit; font-family: inherit; cursor: pointer;
+    transition: background .2s ease, box-shadow .25s ease, transform .12s ease;
+}
+.login-dialog .lg-masuk:hover { background: #38AD75; box-shadow: 0 10px 22px -12px rgba(46, 158, 104, .9); }
+.login-dialog .lg-masuk:active { transform: scale(.99); }
+.login-dialog .lg-masuk.loading { pointer-events: none; opacity: .85; }
+.login-dialog .lg-spin { display: none; width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .4); border-top-color: #fff; }
+.login-dialog .lg-masuk.loading .lg-spin { display: block; animation: lgSpin .7s linear infinite; }
+
+.login-dialog .lg-catatan { margin: 18px 0 0; text-align: center; font-size: 13px; color: var(--lg-soft); }
+.login-dialog .lg-demo {
+    margin: 10px 0 0; padding: 10px 12px; text-align: center; font-size: 12px; line-height: 1.6;
+    border: 1px solid var(--lg-line); border-radius: 9px; background: var(--lg-field); color: var(--lg-soft);
+}
+.login-dialog .lg-demo strong { color: var(--lg-ink); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+    dialog.login-dialog, dialog.login-dialog * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
