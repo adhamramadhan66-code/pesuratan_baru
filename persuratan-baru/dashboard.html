@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Lindungi halaman demo: hanya dibuka jika sesi login tersedia.
+        (function () {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
+                if (!user || user.email !== 'admin@tsu.ac.id') window.location.replace('index.html');
+            } catch (error) {
+                window.location.replace('index.html');
+            }
+        })();
+    </script>
+    <title>Dashboard | Persuratan TSU</title>
+    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="surat.css?v=18">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Terapkan tema tersimpan sebelum halaman digambar (mencegah kedip)
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+</head>
+<body class="preload">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
+            </div>
+
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item active">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="upload_surat.html" class="nav-item">
+                    <i data-lucide="upload" class="icon"></i>
+                    <span>Upload Surat</span>
+                </a>
+            </nav>
+        </div>    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <p class="page-sub">Persuratan</p>
+                <h2>Dashboard</h2>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <span id="currentUserLabel" class="user-label">Admin TSU</span>
+                <img src="https://i.pravatar.cc/150?img=32" alt="Profil Admin TSU" class="profile-img">
+            </div>
+        </header>
+
+        <!-- JENIS SURAT: geser otomatis / diseret; "Lihat semua" mengubah dashboard jadi kotak-kotak -->
+        <section class="jenis-sec" id="jenisSec" aria-label="Jenis surat">
+            <div class="jenis-head">
+                <h3>Jenis surat <span class="jenis-rentang" id="jenisRentang"></span></h3>
+                <button type="button" class="btn sm" id="btnJenisSemua">Lihat semua</button>
+            </div>
+            <div class="jenis-track" id="jenisTrack" aria-label="Jenis surat yang sudah dibuat"></div>
+            <div class="jenis-grid" id="jenisGrid" hidden></div>
+        </section>
+
+        <!-- TABLE -->
+        <div class="table-card" data-dash id="tabelTerbaru">
+            <div class="table-header">
+                <div><h3>Surat terbaru</h3><span class="muted" id="terbaruInfo" style="font-size:.8125rem"></span></div>
+            </div>
+            <div class="toolbar terbaru-filter" id="filterTerbaru">
+                <form class="search-box" id="tbCari" role="search">
+                    <i data-lucide="search" class="icon-search"></i>
+                    <input type="text" id="tbQ" placeholder="Cari nomor / perihal surat…" aria-label="Cari surat">
+                </form>
+                <select id="tbJenis" aria-label="Jenis surat"><option value="">Semua jenis</option></select>
+                <select id="tbUnit" aria-label="Unit pembuat"><option value="">Semua unit</option></select>
+                <select id="tbTujuan" aria-label="Tujuan surat"><option value="">Internal &amp; Eksternal</option><option value="A">Internal</option><option value="B">Eksternal</option></select>
+                <select id="tbJalur" aria-label="Surat masuk atau keluar"><option value="">Surat Masuk &amp; Keluar</option><option value="disposisi">Surat Masuk</option><option value="keluar">Surat Keluar</option></select>
+                <select id="tbUrut" aria-label="Urutan"><option value="">Terbaru dulu</option><option value="lama">Terlama dulu</option></select>
+                <button type="button" class="btn sm" id="tbReset">Reset filter</button>
+            </div>
+            <div class="galeri" id="galeri"><p class="galeri-kosong">Memuat…</p></div>
+        </div>
+        <!-- GRAFIK (di bawah Surat terbaru) -->
+        <div class="charts-grid tunggal" data-dash>
+            <div class="chart-card main-chart">
+                <div class="chart-header">
+                    <h3 id="chartJudul">Surat per bulan</h3>
+                    <label class="grafik-filter toolbar">Jenis: <select id="fGrafikJenis" aria-label="Saring grafik menurut jenis surat"><option value="">Semua jenis surat</option></select></label>
+                </div>
+                <p class="chart-sub" id="chartSub"></p>
+                <div class="bars" id="bars" aria-label="Grafik jumlah surat per bulan"></div>
+            </div>
+        </div>
+    </main>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="app.js?v=7"></script>
+    <script src="profil.js?v=1"></script>
+    <script>
+        // Statistik dashboard: dimuat ulang setiap rentang tanggal berubah (event "rentang" di bawah halaman).
+        (function () {
+            const { $, esc, tglIndo, api, toast } = App;
+            const BLN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const BLN_PENUH = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            let terakhir = '', rentangIni = null;
+
+            // ---------- Grafik: kolom dibuat sekali, lalu tingginya dianimasikan naik/turun ----------
+            function gambarGrafik(label, data, maks, aktif) {
+                const bars = $('bars');
+                bars.classList.toggle('padat', label.length > 12);
+                if (bars.children.length !== label.length) {
+                    bars.innerHTML = label.map((m) => '<div class="bar-col"><span class="v">0</span><div class="b" style="height:0"></div><span class="m">' + esc(m) + '</span></div>').join('');
+                    void bars.offsetHeight;   // pastikan tinggi awal 0 tergambar dulu supaya batang "tumbuh" dari bawah
+                }
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    [...bars.children].forEach((kol, i) => {
+                        kol.classList.toggle('on', aktif(i));
+                        kol.querySelector('.v').textContent = data[i];
+                        kol.querySelector('.b').style.height = Math.round((data[i] / maks) * 85) + '%';
+                    });
+                }));
+            }
+            let filterTerisi = false;
+            function isiFilterJenis(daftar) {
+                if (filterTerisi || !daftar.length) return;
+                filterTerisi = true;
+                const sel = $('fGrafikJenis');
+                sel.insertAdjacentHTML('beforeend', daftar.slice().sort((x, y) => x.nama.localeCompare(y.nama)).map((j) => '<option value="' + esc(j.kode) + '">' + esc(j.nama) + ' (' + esc(j.kode) + ')</option>').join(''));
+            }
+            $('fGrafikJenis').addEventListener('change', () => { if (rentangIni) document.dispatchEvent(new CustomEvent('rentang', { detail: rentangIni })); });
+
+            // ---------- Jenis surat: carousel otomatis + seret, atau kotak-kotak (Lihat semua) ----------
+            const trek = $('jenisTrack'), grid = $('jenisGrid'), tombol = $('btnJenisSemua');
+            let posisi = 0, semuaMode = false, ttd = '', geserAktif = true, tahan = false;
+            const kartuJenis = (j) => '<a class="jenis-card" draggable="false" href="#tabelTerbaru" data-kode="' + esc(j.kode) + '">' +
+                '<span class="jk">' + esc(j.kode) + '</span><span class="jn">' + esc(j.nama) + '</span><span class="jc"><b>' + j.n + '</b> surat</span></a>';
+            function tampilJenis(daftar) {
+                const tanda = JSON.stringify(daftar);
+                if (tanda === ttd) return;
+                ttd = tanda;
+                grid.innerHTML = daftar.length ? daftar.map(kartuJenis).join('') : '<p class="galeri-kosong">Belum ada jenis surat.</p>';   // semua jenis, termasuk yang 0 surat
+                const atas = daftar.slice(0, 8);   // jenis yang sudah dipakai di depan, sisanya mengisi sampai 8 kotak
+                trek.innerHTML = atas.length ? '<div class="jenis-set">' + atas.map(kartuJenis).join('') + '</div>' : '<p class="galeri-kosong">Belum ada jenis surat.</p>';
+                trek.scrollLeft = 0; posisi = 0;
+                const set = trek.querySelector('.jenis-set');
+                if (set) {
+                    const asli = set.innerHTML;
+                    for (let i = 0; i < 6 && set.scrollWidth <= trek.clientWidth + 16; i++) set.insertAdjacentHTML('beforeend', asli);   // pastikan lebih lebar dari layar
+                    trek.appendChild(set.cloneNode(true));   // salinan agar putarannya mulus
+                }
+            }
+            // geser otomatis (berhenti saat kursor di atasnya atau sedang diseret)
+            function gerak() {
+                const sets = trek.querySelectorAll('.jenis-set');
+                if (geserAktif && !tahan && !semuaMode && sets.length === 2) {
+                    posisi += 0.6;
+                    const setengah = sets[1].offsetLeft - sets[0].offsetLeft;
+                    if (posisi >= setengah) posisi -= setengah;
+                    trek.scrollLeft = posisi;
+                } else posisi = trek.scrollLeft;
+                requestAnimationFrame(gerak);
+            }
+            requestAnimationFrame(gerak);
+            trek.addEventListener('mouseenter', () => { tahan = true; });
+            trek.addEventListener('mouseleave', () => { tahan = false; });
+            trek.addEventListener('touchstart', () => { tahan = true; }, { passive: true });
+            trek.addEventListener('touchend', () => { setTimeout(() => { tahan = false; }, 1500); });
+            // seret dengan kursor
+            let seret = null, bergerak = false;
+            trek.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; seret = { x: e.clientX, kiri: trek.scrollLeft }; bergerak = false; trek.classList.add('menyeret'); });
+            window.addEventListener('pointermove', (e) => {
+                if (!seret) return;
+                const dx = e.clientX - seret.x;
+                if (Math.abs(dx) > 4) bergerak = true;
+                let p = seret.kiri - dx;
+                const sets = trek.querySelectorAll('.jenis-set');
+                if (sets.length === 2) { const h = sets[1].offsetLeft - sets[0].offsetLeft; p = ((p % h) + h) % h; seret.kiri = p + dx; }
+                trek.scrollLeft = p; posisi = p;
+            });
+            window.addEventListener('pointerup', () => { seret = null; trek.classList.remove('menyeret'); });
+            trek.addEventListener('click', (e) => { if (bergerak) { e.preventDefault(); bergerak = false; } }, true);
+            tombol.addEventListener('click', () => {
+                semuaMode = !semuaMode;
+                document.querySelectorAll('[data-dash]').forEach((el) => { el.hidden = semuaMode; });
+                trek.hidden = semuaMode; grid.hidden = !semuaMode;
+                tombol.textContent = semuaMode ? 'Kembali ke dashboard' : 'Lihat semua';
+                $('jenisSec').classList.toggle('semua', semuaMode);
+            });
+            document.addEventListener('click', (e) => {
+                const k = e.target.closest('.jenis-card[data-kode]');
+                if (!k) return;
+                e.preventDefault();
+                if (semuaMode) tombol.click();
+                $('tbJenis').value = k.dataset.kode;
+                if ($('tbJenis').value !== k.dataset.kode) $('tbJenis').value = '';
+                muatTerbaru();
+                $('tabelTerbaru').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            const pct = (n, t) => (t ? Math.round((n / t) * 100) : 0) + '%';
+
+            // ---------- Surat terbaru (mengikuti kalender + filter lengkap) ----------
+            const FILTER = { q: 'tbQ', jenis: 'tbJenis', unit: 'tbUnit', tujuan: 'tbTujuan', jalur: 'tbJalur', urut: 'tbUrut' };
+            let tungguTerbaru = 0;
+            async function muatTerbaru() {
+                if (!rentangIni) return;
+                const my = ++tungguTerbaru;
+                const p = new URLSearchParams({ aksi: 'terbaru', dari: rentangIni.dari, sampai: rentangIni.sampai, limit: 12 });
+                Object.entries(FILTER).forEach(([k, id]) => { const v = $(id).value.trim(); if (v) p.set(k, v); });
+                try {
+                    const d = await api('api/surat.php?' + p);
+                    if (my !== tungguTerbaru) return;
+                    const aktif = Object.values(FILTER).some((id) => $(id).value);
+                    $('terbaruInfo').textContent = rentangIni.label + ' · ' + d.surat.length + (d.total > d.surat.length ? ' dari ' + d.total : '') + ' surat' + (aktif ? ' (difilter)' : '');
+                    $('galeri').innerHTML = d.surat.length ? d.surat.map((r) => {
+                        const sdh = r.status_arsip === 'diarsipkan', keluar = r.jalur === 'keluar';
+                        return App.kartuHtml({
+                            kelas: sdh ? 'ok' : 'bad', judulTeks: r.nomor_surat, judul: esc(r.nomor_surat),
+                            thumb: App.thumbSurat({ ada: r.ada_file, link: r.link_drive, url: 'api/arsip.php?aksi=file&id=' + r.id, nama: r.file_nama }),
+                            sub: [esc(r.perihal), esc(tglIndo(r.tanggal_surat)) + ' · ' + (r.kode_tujuan === 'A' ? 'Internal' : 'Eksternal') + ' · ' + (keluar ? 'Surat Keluar' : 'Surat Masuk')],
+                            status: '<span class="badge ' + (sdh ? 'ok' : 'warn') + '">' + 'Diarsipkan' + '</span>',
+                        });
+                    }).join('') : '<p class="galeri-kosong">' + (aktif ? 'Tidak ada surat yang cocok dengan filter pada rentang ini.' : 'Tidak ada surat pada rentang tanggal ini.') + '</p>';
+                } catch (e) { toast(e.message, true); $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>'; }
+            }
+            $('tbCari').addEventListener('submit', (ev) => { ev.preventDefault(); muatTerbaru(); });
+            let tmTerbaru;
+            $('tbQ').addEventListener('input', () => { clearTimeout(tmTerbaru); tmTerbaru = setTimeout(muatTerbaru, 300); });
+            Object.values(FILTER).filter((id) => id !== 'tbQ').forEach((id) => $(id).addEventListener('change', muatTerbaru));
+            $('tbReset').addEventListener('click', () => { Object.values(FILTER).forEach((id) => { $(id).value = ''; }); muatTerbaru(); });
+            api('api/surat.php?aksi=opsi').then((o) => {
+                $('tbJenis').insertAdjacentHTML('beforeend', o.jenis.map((x) => '<option value="' + esc(x.kode) + '">' + esc(x.nama) + '</option>').join(''));
+                $('tbUnit').insertAdjacentHTML('beforeend', o.unit.map((x) => '<option value="' + esc(x.kode) + '">' + esc(x.nama) + '</option>').join(''));
+            }).catch(() => {});
+
+            document.addEventListener('rentang', async (ev) => {
+                const { dari, sampai, mode } = ev.detail;
+                rentangIni = ev.detail;
+                const kunci = dari + sampai + mode + $('fGrafikJenis').value;
+                if (kunci === terakhir) return;
+                terakhir = kunci;
+                try {
+                    const d = await api('api/surat.php?aksi=statistik&dari=' + dari + '&sampai=' + sampai + '&jenis=' + encodeURIComponent($('fGrafikJenis').value));
+                    if (kunci !== terakhir) return;             // sudah ada permintaan yang lebih baru
+                    $('jenisRentang').textContent = '· ' + ev.detail.label;
+                    tampilJenis(d.per_jenis || []);
+
+                    // Grafik mengikuti kalender: tahun -> per bulan; bulan/hari -> per hari pada bulan itu (hari terpilih disorot)
+                    const y = +dari.slice(0, 4), awal = new Date(dari + 'T00:00'), akhir = new Date(sampai + 'T00:00');
+                    if (mode === 'year') {
+                        const maks = Math.max(1, ...d.per_bulan);
+                        $('chartJudul').textContent = 'Surat per bulan — ' + d.tahun;
+                        $('chartSub').textContent = 'Jumlah surat setiap bulan pada tahun ' + d.tahun;
+                        gambarGrafik(BLN, d.per_bulan, maks, (i) => new Date(y, i + 1, 0) >= awal && new Date(y, i, 1) <= akhir);
+                    } else {
+                        const m = +dari.slice(5, 7) - 1, maks = Math.max(1, ...d.per_hari);
+                        $('chartJudul').textContent = 'Surat per hari — ' + BLN_PENUH[m] + ' ' + y;
+                        $('chartSub').textContent = mode === 'day' ? 'Jumlah surat setiap hari · tanggal ' + ev.detail.label + ' disorot' : 'Jumlah surat setiap hari pada ' + BLN_PENUH[m] + ' ' + y;
+                        gambarGrafik(d.per_hari.map((_, i) => String(i + 1)), d.per_hari, maks, (i) => new Date(y, m, i + 1) >= awal && new Date(y, m, i + 1) <= akhir);
+                    }
+                    isiFilterJenis(d.per_jenis || []);
+
+                    muatTerbaru();
+                } catch (e) {
+                    terakhir = '';
+                    toast(e.message, true);
+                    $('galeri').innerHTML = '<p class="galeri-kosong">' + esc(e.message) + '</p>';
+                }
+            });
+        })();
+    </script>
+    <script>
+        // Kalender dihapus: dashboard menampilkan tahun berjalan.
+        (function () {
+            const y = new Date().getFullYear();
+            document.dispatchEvent(new CustomEvent('rentang', { detail: { dari: y + '-01-01', sampai: y + '-12-31', mode: 'year', label: 'Tahun ' + y } }));
+        })();
+    </script>
+    <script src="mobile.js?v=1"></script>
+</body>
+</html>
